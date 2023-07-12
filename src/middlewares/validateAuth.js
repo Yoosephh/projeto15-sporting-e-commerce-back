@@ -1,4 +1,4 @@
-import { db } from "../database.js"
+import { db } from "../database/databaseConfig.js"
 export async function validateAuth (req, res, next){
     const {token} = req.headers
     if (!token) return res.sendStatus(401)
