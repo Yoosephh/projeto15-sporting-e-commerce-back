@@ -1,11 +1,16 @@
 import { Router } from "express";
-import { login, signUp } from "../controllers/userControllers.js";
-import { loginSchema, signUpSchema } from "../schemas/userSchemas.js";
+import { myCart, login, signUp, userInfo, newSelectedProducts } from "../controllers/userControllers.js";
+import { loginSchema, selectedProductsSchema, signUpSchema } from "../schemas/userSchemas.js";
 import { validateSchemas } from "../middlewares/validateSchema.js";
+import { validateAuth } from "../middlewares/validateAuth.js";
 
 const userRouter = Router()
 
 userRouter.post('/cadastro', validateSchemas(signUpSchema), signUp)
+userRouter.get('/cadastro', validateAuth, userInfo)
 userRouter.post('/', validateSchemas(loginSchema), login)
+userRouter.get('/meu-carrinho', validateAuth, myCart)
+userRouter.post('/meu-carrinho', validateAuth, validateSchemas(selectedProductsSchema), newSelectedProducts)
+
 
 export default userRouter
