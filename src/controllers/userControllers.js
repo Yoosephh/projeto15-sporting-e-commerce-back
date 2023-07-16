@@ -6,7 +6,7 @@ export const signUp = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const user = { name, email, password: hash };
+    const user = { name, email, password: hash, selectedProducts: [] };
     const checkDB = await db.collection("users").findOne({ email });
     if (checkDB) return res.sendStatus(409);
 
@@ -40,3 +40,46 @@ export const login = async (req, res) => {
     res.sendStatus(400);
   }
 };
+
+export const myCart = async (req, res) => {
+    const {token} = req.headers
+
+    try{
+        const {userID} = await db.collection('sessions').findOne({token})
+        const {selectedProducts} = await db.collection('users').findOne({_id: userID})
+        res.status(200).send(selectedProducts)
+    } catch{
+        res.sendStatus(400)
+    }
+}
+
+export const userInfo = async (req, res) =>{
+    const {token} = req.headers
+
+    try{
+        const {userID} = await db.collection('sessions').findOne({token})
+        if(!userID) return res.sendStatus(425)
+        const {name, email, selectedProducts} = await db.collection('users').findOne({_id: userID}) //ver quantidade de objetos iguais depois
+
+        res.status(200).send({name, email, selectedProducts})
+    } catch{
+        res.sendStatus(400)
+    }
+}
+
+export const newSelectedProducts = async (req, res) => {
+    const {name, description, price, image} = req.body
+    const {token} = req.headers
+    const newProduct = {name, description, price, image}
+
+    try{
+        const {userID} = await db.collection('sessions').findOne({token})
+        const {selectedProducts} = await db.collection('users').findOne({_id: userID})
+        selectedProducts.push(newProduct)
+        await db.collection('users').updateOne({_id: userID}, {$set:{selectedProducts}})
+        console.log(await db.collection('users').findOne({_id: userID}))
+        res.sendStatus(200)
+    }catch{
+        res.sendStatus(400)
+    }
+}
