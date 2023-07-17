@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import { db } from "../databaseConfig.js";
+import userRouter from "../routes/users.Routes.js";
 
 export const signUp = async (req, res) => {
   const { name, email, password } = req.body;
@@ -82,4 +83,24 @@ export const newSelectedProducts = async (req, res) => {
     }catch{
         res.sendStatus(400)
     }
+}
+
+export const purchaseConfirmed = async (req, res) => {
+  const {user, adress, card, products} = req.body
+  const {token} = req.headers
+  const buyer = {user, adress, card, products}
+
+  try{
+    const {userID} = await db.collection('sessions').findOne({token})
+    const registeredUser = await db.collection('users').findOne({_id: userID})
+    if(user.email !== registeredUser.email) return res.sendStatus(404)
+    buyer.userID = userID
+    console.log(buyer)
+    await db.collection('users').updateOne({_id: userID}, {$set: {selectedProducts: []}})
+    await db.collection('purchases').insertOne(buyer)
+    res.status(200).send(buyer)
+  }
+  catch{
+    res.sendStatus(400)
+  }
 }
